@@ -129,6 +129,7 @@ public class WeaponController : MonoBehaviour
         var targetPosition = transform.position;
         if (isAimingIn)
         {
+            weaponAnimator.SetBool("isSprinting", false);
             targetPosition = characterController.camera.transform.position + (weaponSwayObject.transform.position - sightTarget.position) + (characterController.camera.transform.forward * sightOffset);
         }
 
@@ -169,40 +170,46 @@ public class WeaponController : MonoBehaviour
 
     private void SetWeaponAnimation()
     {
-        if (isGroundedTrigger)
+        if (!characterController.isAimingIn)
         {
-            fallingDelay = 0;
-        }
-        else
-        {
-            fallingDelay += Time.deltaTime;
-        }
+            if (isGroundedTrigger)
+            {
+                fallingDelay = 0;
+            }
+            else
+            {
+                fallingDelay += Time.deltaTime;
+            }
 
-        if (characterController.isGrounded && !isGroundedTrigger && fallingDelay > 0.1f)
-        {
-            weaponAnimator.SetTrigger("Land");
-            isGroundedTrigger = true;
+            if (characterController.isGrounded && !isGroundedTrigger && fallingDelay > 0.1f)
+            {
+                weaponAnimator.SetTrigger("Land");
+                isGroundedTrigger = true;
+            }
+            if (!characterController.isGrounded && isGroundedTrigger)
+            {
+                weaponAnimator.SetTrigger("Falling");
+                isGroundedTrigger = false;
+            }
+            weaponAnimator.SetBool("isSprinting", characterController.isSprinting);
+            weaponAnimator.SetFloat("WeaponAnimationSpeed", characterController.weaponAnimationSpeed);
         }
-        if (!characterController.isGrounded && isGroundedTrigger)
-        {
-            weaponAnimator.SetTrigger("Falling");
-            isGroundedTrigger = false;
-        }
-
-        weaponAnimator.SetBool("isSprinting", characterController.isSprinting);
-        weaponAnimator.SetFloat("WeaponAnimationSpeed", characterController.weaponAnimationSpeed);
+        
 
     }
 
     private void CalculateWeaponSway()
     {
-        var targetPosition = LissajousCurve(swayTime, swayAmountA, swayAmountB) / (isAimingIn ? swayScale * 3 : swayScale);
-
-        swayPosition = Vector3.Lerp(swayPosition, targetPosition, Time.smoothDeltaTime * swayLerpSpeed);
-        swayTime += Time.deltaTime;
-        if(swayTime>6.3f)
+        if (!characterController.isAimingIn)
         {
-            swayTime = 0;
+            var targetPosition = LissajousCurve(swayTime, swayAmountA, swayAmountB) / (isAimingIn ? swayScale * 3 : swayScale);
+
+            swayPosition = Vector3.Lerp(swayPosition, targetPosition, Time.smoothDeltaTime * swayLerpSpeed);
+            swayTime += Time.deltaTime;
+            if(swayTime>6.3f)
+            {
+                swayTime = 0;
+            }
         }
     }
 

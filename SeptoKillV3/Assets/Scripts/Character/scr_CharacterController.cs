@@ -366,13 +366,20 @@ public class scr_CharacterController : MonoBehaviour
 
     private void ToggleSprint()
     {
-        if (input_Movement.y <= 0.2f)
+        if (!isAimingIn)
         {
-            isSprinting = false;
-            return;
-        }
+            if (!isLeaningLeft || !isLeaningRight)
+            {
+                if (input_Movement.y <= 0.2f)
+                {
+                    isSprinting = false;
+                    return;
+                }
 
-        isSprinting = !isSprinting;
+                isSprinting = !isSprinting;
+            }
+            
+        }
     }
     private void StopSprint()
     {
