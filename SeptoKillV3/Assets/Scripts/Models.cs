@@ -10,11 +10,6 @@ public static class Models
         Crouch,
         Prone
     }
-    public enum WeaponFireType
-    {
-        SemiAuto,
-        FullyAuto
-    }
 
     [Serializable]
     public class PlayerSettingsModel

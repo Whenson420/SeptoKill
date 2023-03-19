@@ -296,9 +296,18 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Reload",
+                    "type": "Button",
+                    "id": "d9046388-bec1-4a64-adfb-5a82c0f93edf",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Fire1Pressed",
                     "type": "Button",
-                    "id": "c1510d2f-ab4e-42f9-8a46-28cfb0b1a6b8",
+                    "id": "ed319f80-1206-4e5f-98da-0122822a5bb1",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -307,16 +316,7 @@
                 {
                     "name": "Fire1Released",
                     "type": "Button",
-                    "id": "94da5064-fb67-41e1-a4ce-ca97fa3bd369",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Reload",
-                    "type": "Button",
-                    "id": "d9046388-bec1-4a64-adfb-5a82c0f93edf",
+                    "id": "9ee54f8d-6cb2-4646-8e37-e23b8e2bfb6e",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -348,7 +348,18 @@
                 },
                 {
                     "name": "",
-                    "id": "7e189c7b-c6fb-4cdd-9975-08f5e1342cf3",
+                    "id": "9c7acd57-c588-4611-8b60-a810a542d0fd",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "43d53115-afb3-4161-b59e-1881554a657f",
                     "path": "<Mouse>/leftButton",
                     "interactions": "Press",
                     "processors": "",
@@ -359,23 +370,12 @@
                 },
                 {
                     "name": "",
-                    "id": "83698f44-c162-4bab-b920-8a23fdf45753",
+                    "id": "4693d594-3f58-4ba9-a702-7fc1dafa2a06",
                     "path": "<Mouse>/leftButton",
                     "interactions": "Press(behavior=1)",
                     "processors": "",
                     "groups": "",
                     "action": "Fire1Released",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "9c7acd57-c588-4611-8b60-a810a542d0fd",
-                    "path": "<Keyboard>/r",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Reload",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

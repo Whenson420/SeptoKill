@@ -2,18 +2,23 @@ using UnityEngine;
 
 public class Target : MonoBehaviour
 {
-    public float health = 50f;
-
-    public void TakeDamage(float amount)
+    public float health = 100;
+    public void Update()
     {
-        health -= amount;
-        if (health <= 0f)
+        if (health <= 0)
         {
             Die();
         }
     }
-    void Die()
+
+    public void TakeDamage(int damage)
     {
-        Destroy(gameObject);
+        health -= damage;
+        Debug.Log("Damaged!");
+
+    }
+    public void Die()
+    {
+        Debug.Log("You killed an enemy!");
     }
 }

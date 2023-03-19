@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using TMPro;
 using static Models;
+using EZCameraShake;
 
 public class WeaponController : MonoBehaviour
 {
@@ -9,8 +11,6 @@ public class WeaponController : MonoBehaviour
 
     [Header("References")]
     public Animator weaponAnimator;
-    public GameObject bulletPrefab;
-    public Transform bulletSpawn;
 
     [Header("Settings")]
     public WeaponSettingsModel settings;
@@ -57,17 +57,22 @@ public class WeaponController : MonoBehaviour
     private Vector3 weaponSwayPositionVelocity;
 
     [Header("Shooting")]
-    public float rateOfFire;
-    private float currantFireRate;
-    public List<WeaponFireType> allowedFireTypes;
-    public WeaponFireType currentFireType;
-    [HideInInspector]
-    public bool isShooting;
+
+    public int damage;
+    public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
+    public int magazineSize, bulletsPerTap;
+    public int bulletsLeft, bulletsShot;
+    public bool shooting, readyToShoot, reloading;
+    public Transform attackPoint;
+    public RaycastHit rayHit;
+    public LayerMask Enemy;
+    public GameObject muzzleFlash, bulletHoleGraphic;
+    public float camShakeMagnitude, camShakeDuration;
+    public TextMeshProUGUI text;
 
     private void Start()
     {
         newWeaponRotation = transform.localRotation.eulerAngles;
-        currentFireType = allowedFireTypes.First();
     }
 
     public void Initialize(scr_CharacterController CharacterController)
@@ -78,6 +83,16 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
+        text.SetText(bulletsLeft + " / " + magazineSize);
+        if (readyToShoot && shooting && !reloading && bulletsLeft > 0)
+        {
+            bulletsShot = bulletsPerTap;
+            Shoot();
+        }
+        if (bulletsLeft == 0)
+        {
+            Reload();
+        }
         if (!isInitialized)
         {
             return;
@@ -101,29 +116,7 @@ public class WeaponController : MonoBehaviour
         }
     }
 
-    void OnGUI()
-    {
-        if (!isEnabled)
-            GUI.Label(new Rect(Screen.width / 2 - 15, Screen.height / 2 - 20, 100, 50), crossHair);
-    }
 
-    private void CalculateShooting()
-    {
-        if(isShooting)
-        {
-            Shoot();
-            if (currentFireType == WeaponFireType.SemiAuto)
-            {
-                isShooting = false;
-            }
-        }
-    }
-
-    private void Shoot()
-    {
-        var bullet = Instantiate(bulletPrefab, bulletSpawn);
-
-    }
     private void CalculateAimingIn()
     {
         var targetPosition = transform.position;
@@ -132,17 +125,17 @@ public class WeaponController : MonoBehaviour
             weaponAnimator.SetBool("isSprinting", false);
             targetPosition = characterController.camera.transform.position + (weaponSwayObject.transform.position - sightTarget.position) + (characterController.camera.transform.forward * sightOffset);
         }
-
         weaponSwayPosition = weaponSwayObject.transform.position;
         weaponSwayPosition = Vector3.SmoothDamp(weaponSwayPosition, targetPosition, ref weaponSwayPositionVelocity, aimingInTime);
         weaponSwayObject.transform.position = weaponSwayPosition + swayPosition;
+
     }
-    
+
     public void TriggerJump()
     {
         isGroundedTrigger = false;
-        weaponAnimator.SetTrigger("Jump");
-
+        if(!isAimingIn)
+            weaponAnimator.SetTrigger("Jump");
     }
 
 
@@ -216,5 +209,56 @@ public class WeaponController : MonoBehaviour
     private Vector3 LissajousCurve(float Time, float A, float B)
     {
         return new Vector3(Mathf.Sin(Time), A * Mathf.Sin(B * Time + Mathf.PI));
+    }
+
+    public void Shoot()
+    {
+        readyToShoot = false;
+
+        float x = Random.Range(-spread, spread);
+        float y = Random.Range(-spread, spread);
+
+        Vector3 direction = characterController.cameraHolder.transform.forward + new Vector3(x, y, 0);
+
+        if (Physics.Raycast(characterController.cameraHolder.position, direction, out rayHit, range, Enemy))
+        {
+            if (rayHit.collider.CompareTag("Enemy"))
+                rayHit.collider.GetComponent<Target>().TakeDamage(damage);
+        }
+
+        CameraShaker.Instance.ShakeOnce(camShakeMagnitude,1f,camShakeDuration/2,camShakeDuration/2);
+        Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
+        Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
+
+        bulletsLeft--;
+        bulletsShot--;
+
+        if (!IsInvoking("ResetShot") && !readyToShoot)
+        {
+            Invoke("ResetShot", timeBetweenShooting);
+        }
+
+        if (bulletsShot > 0 && bulletsLeft > 0)
+            Invoke("Shoot", timeBetweenShots);
+    }
+    private void ResetShot()
+    {
+        readyToShoot = true;
+    }
+    public void Reload()
+    {
+        if (bulletsLeft < magazineSize && !reloading)
+        {
+            reloading = true;
+            weaponAnimator.SetBool("Reloading", true);
+            Debug.Log("Success");
+            Invoke("ReloadFinished", reloadTime);
+        }
+    }
+    private void ReloadFinished()
+    {
+        bulletsLeft = magazineSize;
+        reloading = false;
+        weaponAnimator.SetBool("Reloading", false);
     }
 }

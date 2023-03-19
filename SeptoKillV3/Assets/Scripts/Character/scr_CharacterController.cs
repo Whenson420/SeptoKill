@@ -1,10 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using static Models;
+using EZCameraShake;
 
 public class scr_CharacterController : MonoBehaviour
 {
+    [SerializeField] private float currentHealth = 100.0f;
+    [SerializeField] private float maxHealth = 100.0f;
+    [SerializeField] private int regenRate = 1;
+    [SerializeField] private bool canRegen = false;
+    [SerializeField] private float healCooldown = 3.0f;
+    [SerializeField] private float maxHealCooldown = 3.0f;
+    [SerializeField] private bool startCooldown = false;
+    [SerializeField] public Image Splatter = null;
+    [SerializeField] public Image hurtImage = null;
+    [SerializeField] private float hurtTimer = 0.1f;
+
+    [SerializeField] private AudioClip hurtAudio = null;
+    [SerializeField] private AudioSource healthAudioSource;
+
     private CharacterController characterController;
     private DefaultInput defaultInput;
     [HideInInspector]
@@ -81,7 +98,9 @@ public class scr_CharacterController : MonoBehaviour
 
     private void Awake()
     {
-        Cursor.visible = false;
+        healthAudioSource = GetComponent<AudioSource>();
+        currentWeapon.bulletsLeft = currentWeapon.magazineSize;
+        currentWeapon.readyToShoot = true;
         Cursor.lockState = CursorLockMode.Locked;
 
         defaultInput = new DefaultInput();
@@ -94,15 +113,15 @@ public class scr_CharacterController : MonoBehaviour
 
         defaultInput.Character.Prone.performed += e => Prone();
 
+        defaultInput.Weapon.Reload.performed += e => currentWeapon.Reload();
+
         defaultInput.Character.Sprint.performed += e => ToggleSprint();
         defaultInput.Character.SprintReleased.performed += e => StopSprint();
 
         defaultInput.Weapon.Fire2Pressed.performed += e => AimingInPressed();
         defaultInput.Weapon.Fire2Released.performed += e => AimingInReleased();
-
-        defaultInput.Weapon.Fire1Pressed.performed += e => ShootingPressed();
-        defaultInput.Weapon.Fire1Released.performed += e => ShootingReleased();
-
+        defaultInput.Weapon.Fire1Pressed.performed += e => currentWeapon.shooting = true;
+        defaultInput.Weapon.Fire1Released.performed += e => currentWeapon.shooting = false;
 
         defaultInput.Character.LeanLeftPressed.performed += e => isLeaningLeft = true;
         defaultInput.Character.LeanLeftReleased.performed += e => isLeaningLeft = false;
@@ -136,35 +155,50 @@ public class scr_CharacterController : MonoBehaviour
         CalculateStance();
         CalculateLeaning();
         CalculateAimingIn();
-    }
-
-    private void ShootingPressed()
-    {
-        if(currentWeapon)
+        if (currentHealth <= 0)
         {
-            currentWeapon.isShooting = true;
+            Die();
+        }
+        if (startCooldown)
+        {
+            healCooldown -= Time.deltaTime;
+            if (healCooldown <= 0)
+            {
+                canRegen = true;
+                startCooldown = false;
+            }
+        }
+        if (canRegen)
+        {
+            if (currentHealth <= maxHealth - 0.01)
+            {
+                currentHealth += Time.deltaTime * regenRate;
+                UpdateHealth();
+            }
+            else
+            {
+                currentHealth = maxHealth;
+                healCooldown = maxHealCooldown;
+                canRegen = false;
+
+            }
         }
     }
-
-    private void ShootingReleased()
-    {
-        if (currentWeapon)
-        {
-            currentWeapon.isShooting = false;
-        }
-    }
+    #region Movement
 
     private void AimingInPressed()
     {
         isAimingIn = true;
+        playerSettings.AimingSpeedEffector = 0.4f;
     }
     private void AimingInReleased()
     {
         isAimingIn = false;
+        playerSettings.AimingSpeedEffector = 0.6f;
     }
     private void CalculateAimingIn()
     {
-        if(!currentWeapon)
+        if (!currentWeapon)
         {
             return;
         }
@@ -184,10 +218,10 @@ public class scr_CharacterController : MonoBehaviour
 
     private void CalculateView()
     {
-        newCharacterRotation.y +=(isAimingIn ? playerSettings.ViewXSensitivity * playerSettings.AimingSensitivityEffector : playerSettings.ViewXSensitivity) * (playerSettings.ViewXSensitivity * (playerSettings.ViewXInverted ? -input_View.x : input_View.x) * Time.deltaTime);
+        newCharacterRotation.y += (isAimingIn ? playerSettings.ViewXSensitivity * playerSettings.AimingSensitivityEffector : playerSettings.ViewXSensitivity) * (playerSettings.ViewXSensitivity * (playerSettings.ViewXInverted ? -input_View.x : input_View.x) * Time.deltaTime);
         transform.rotation = Quaternion.Euler(newCharacterRotation);
 
-        newCameraRotation.x +=(isAimingIn ? playerSettings.ViewYSensitivity * playerSettings.AimingSensitivityEffector : playerSettings.ViewYSensitivity) * (playerSettings.ViewYSensitivity * (playerSettings.ViewYInverted ? input_View.y : -input_View.y) * Time.deltaTime);
+        newCameraRotation.x += (isAimingIn ? playerSettings.ViewYSensitivity * playerSettings.AimingSensitivityEffector : playerSettings.ViewYSensitivity) * (playerSettings.ViewYSensitivity * (playerSettings.ViewYInverted ? input_View.y : -input_View.y) * Time.deltaTime);
         newCameraRotation.x = Mathf.Clamp(newCameraRotation.x, viewClampYmin, viewClampYmax);
 
         cameraHolder.localRotation = Quaternion.Euler(newCameraRotation);
@@ -203,7 +237,7 @@ public class scr_CharacterController : MonoBehaviour
         var verticalSpeed = playerSettings.WalkingForwardSpeed;
         var horizontalSpeed = playerSettings.WalkingStrafeSpeed;
 
-        if(isSprinting)
+        if (isSprinting)
         {
             verticalSpeed = playerSettings.RunningForwardSpeed;
             horizontalSpeed = playerSettings.RunningStrafeSpeed;
@@ -236,6 +270,7 @@ public class scr_CharacterController : MonoBehaviour
         }
 
 
+
         verticalSpeed *= playerSettings.SpeedEffector;
         horizontalSpeed *= playerSettings.SpeedEffector;
 
@@ -249,7 +284,7 @@ public class scr_CharacterController : MonoBehaviour
 
         playerGravity -= gravityAmount * Time.deltaTime;
 
-        if(playerGravity < -0.1f && !isGrounded)
+        if (playerGravity < -0.1f && !isGrounded)
         {
             playerGravity = -0.1f;
         }
@@ -269,10 +304,12 @@ public class scr_CharacterController : MonoBehaviour
         if (isLeaningLeft)
         {
             targetLean = leanAngle;
+            isSprinting = false;
         }
         else if (isLeaningRight)
         {
             targetLean = -leanAngle;
+            isSprinting = false;
         }
         else
         {
@@ -290,7 +327,7 @@ public class scr_CharacterController : MonoBehaviour
 
     private void CalculateStance()
     {
-        var currentStance= playerStandStance;
+        var currentStance = playerStandStance;
 
         if (playerStance == PlayerStance.Crouch)
         {
@@ -336,7 +373,7 @@ public class scr_CharacterController : MonoBehaviour
     {
         if (playerStance == PlayerStance.Crouch)
         {
-            if(StandCheck(playerStandStance.StanceCollider.height))
+            if (StandCheck(playerStandStance.StanceCollider.height))
             {
                 return;
             }
@@ -366,19 +403,15 @@ public class scr_CharacterController : MonoBehaviour
 
     private void ToggleSprint()
     {
-        if (!isAimingIn)
+        if (!isLeaningLeft || !isLeaningRight)
         {
-            if (!isLeaningLeft || !isLeaningRight)
+            if (input_Movement.y <= 0.2f)
             {
-                if (input_Movement.y <= 0.2f)
-                {
-                    isSprinting = false;
-                    return;
-                }
-
-                isSprinting = !isSprinting;
+                isSprinting = false;
+                return;
             }
-            
+
+            isSprinting = !isSprinting;
         }
     }
     private void StopSprint()
@@ -393,4 +426,39 @@ public class scr_CharacterController : MonoBehaviour
     {
         Gizmos.DrawWireSphere(feetTransform.position, playerSettings.isGroundedRadius);
     }
+    #endregion
+    #region Health
+    void UpdateHealth()
+    {
+        Color splatterAlpha = Splatter.color;
+        splatterAlpha.a = 1 - (currentHealth / maxHealth);
+    }
+
+    IEnumerator HurtFlash()
+    {
+        hurtImage.enabled = true;
+        healthAudioSource.PlayOneShot(hurtAudio);
+        yield return new WaitForSeconds(hurtTimer);
+        hurtImage.enabled = false;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        if (currentHealth >= 0)
+        {
+            canRegen = false;
+            StartCoroutine(HurtFlash());
+            UpdateHealth();
+            healCooldown = maxHealCooldown;
+            //startCooldown = true;
+        }
+        currentHealth -= damage;
+        CameraShaker.Instance.ShakeOnce(2, 1f, 1,  1);
+    }
+    private void Die()
+    {
+
+    }
+    #endregion
+
 }
