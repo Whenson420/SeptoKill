@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 using static Models;
 using EZCameraShake;
 
@@ -14,8 +15,6 @@ public class WeaponController : MonoBehaviour
 
     [Header("Settings")]
     public WeaponSettingsModel settings;
-
-    public Texture2D crossHair;
     public bool isEnabled = false;
 
     bool isInitialized;
@@ -60,19 +59,24 @@ public class WeaponController : MonoBehaviour
 
     public int damage;
     public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
-    public int magazineSize, bulletsPerTap;
-    public int bulletsLeft, bulletsShot;
-    public bool shooting, readyToShoot, reloading;
+    public float magazineSize, Magazines, bulletsPerTap, AmmoSum;
+    public float bulletsLeft, bulletsShot;
+    public bool shooting, readyToShoot, reloading, alreadyPlayed = false;
     public Transform attackPoint;
     public RaycastHit rayHit;
     public LayerMask Enemy;
     public GameObject muzzleFlash, bulletHoleGraphic;
     public float camShakeMagnitude, camShakeDuration;
     public TextMeshProUGUI text;
+    public TextMeshProUGUI Magazinestext;
+    public AudioSource ShootingSFX,MagazineSFX,EmptySFX;
+    public Image MagazineIcon;
 
     private void Start()
     {
+        MagazineIcon.fillAmount = bulletsLeft / magazineSize;
         newWeaponRotation = transform.localRotation.eulerAngles;
+        AmmoSum = (Magazines + 1) * magazineSize;
     }
 
     public void Initialize(scr_CharacterController CharacterController)
@@ -83,16 +87,29 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
-        text.SetText(bulletsLeft + " / " + magazineSize);
+        Magazinestext.SetText(Magazines.ToString());
+        text.SetText(bulletsLeft + " | " + magazineSize);
         if (readyToShoot && shooting && !reloading && bulletsLeft > 0)
         {
             bulletsShot = bulletsPerTap;
             Shoot();
         }
-        if (bulletsLeft == 0)
+        else if (shooting && bulletsLeft == 0)
+        {
+            if (!alreadyPlayed)
+            {
+                EmptySFX.PlayOneShot(EmptySFX.clip);
+                alreadyPlayed = true;
+            }
+            else
+            {
+                Invoke("Reload", 0.5f);
+            }
+        }
+        /*if (bulletsLeft == 0)
         {
             Reload();
-        }
+        }*/
         if (!isInitialized)
         {
             return;
@@ -115,8 +132,6 @@ public class WeaponController : MonoBehaviour
             isEnabled = false;
         }
     }
-
-
     private void CalculateAimingIn()
     {
         var targetPosition = transform.position;
@@ -130,15 +145,12 @@ public class WeaponController : MonoBehaviour
         weaponSwayObject.transform.position = weaponSwayPosition + swayPosition;
 
     }
-
     public void TriggerJump()
     {
         isGroundedTrigger = false;
         if(!isAimingIn)
             weaponAnimator.SetTrigger("Jump");
     }
-
-
     private void CalculateWeaponRotation()
     {
 
@@ -160,7 +172,6 @@ public class WeaponController : MonoBehaviour
         transform.localRotation = Quaternion.Euler(newWeaponRotation + newWeaponMovementRotation);
  
     }
-
     private void SetWeaponAnimation()
     {
         if (!characterController.isAimingIn)
@@ -190,7 +201,6 @@ public class WeaponController : MonoBehaviour
         
 
     }
-
     private void CalculateWeaponSway()
     {
         if (!characterController.isAimingIn)
@@ -205,41 +215,43 @@ public class WeaponController : MonoBehaviour
             }
         }
     }
-
     private Vector3 LissajousCurve(float Time, float A, float B)
     {
         return new Vector3(Mathf.Sin(Time), A * Mathf.Sin(B * Time + Mathf.PI));
     }
-
     public void Shoot()
     {
         readyToShoot = false;
-
-        float x = Random.Range(-spread, spread);
-        float y = Random.Range(-spread, spread);
-
-        Vector3 direction = characterController.cameraHolder.transform.forward + new Vector3(x, y, 0);
-
-        if (Physics.Raycast(characterController.cameraHolder.position, direction, out rayHit, range, Enemy))
+        if (!(bulletsLeft == 0))
         {
-            if (rayHit.collider.CompareTag("Enemy"))
-                rayHit.collider.GetComponent<Target>().TakeDamage(damage);
-        }
+            float x =isAimingIn ? Random.Range(-spread/2, spread/2) : Random.Range(-spread, spread);
+            float y =isAimingIn ? Random.Range(-spread / 2, spread / 2) : Random.Range(-spread, spread);
 
-        CameraShaker.Instance.ShakeOnce(camShakeMagnitude,1f,camShakeDuration/2,camShakeDuration/2);
-        Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
-        Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
+            Vector3 direction = characterController.cameraHolder.transform.forward + new Vector3(x, y, 0);
 
-        bulletsLeft--;
-        bulletsShot--;
+            if (Physics.Raycast(characterController.cameraHolder.position, direction, out rayHit, range, Enemy))
+            {
+                if (rayHit.collider.CompareTag("Enemy"))
+                    rayHit.collider.GetComponent<Target>().TakeDamage(damage);
+            }
 
-        if (!IsInvoking("ResetShot") && !readyToShoot)
-        {
-            Invoke("ResetShot", timeBetweenShooting);
-        }
+            CameraShaker.Instance.ShakeOnce(camShakeMagnitude,1f,camShakeDuration/2,camShakeDuration/2);
+            Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
+            Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
 
-        if (bulletsShot > 0 && bulletsLeft > 0)
-            Invoke("Shoot", timeBetweenShots);
+            bulletsLeft--;
+            bulletsShot--;
+            ShootingSFX.PlayOneShot(ShootingSFX.clip);
+
+            if (!IsInvoking("ResetShot") && !readyToShoot)
+            {
+                Invoke("ResetShot", timeBetweenShooting);
+            }
+
+            if (bulletsShot > 0 && bulletsLeft > 0)
+                Invoke("Shoot", timeBetweenShots);
+        }        
+        MagazineIcon.fillAmount = bulletsLeft / magazineSize;
     }
     private void ResetShot()
     {
@@ -251,14 +263,34 @@ public class WeaponController : MonoBehaviour
         {
             reloading = true;
             weaponAnimator.SetBool("Reloading", true);
-            Debug.Log("Success");
             Invoke("ReloadFinished", reloadTime);
         }
     }
     private void ReloadFinished()
     {
-        bulletsLeft = magazineSize;
+        AmmoSum += bulletsLeft;
+        if (AmmoSum - magazineSize < 0)
+        {
+            Magazines--;
+            bulletsLeft = AmmoSum;
+            Debug.Log("Success");
+            AmmoSum = 0;
+
+        }
+        else
+        {
+            bulletsLeft = magazineSize;
+            AmmoSum -=magazineSize;
+            Magazines--;
+        }
+        if (AmmoSum > 0 && Magazines == 0)
+        {
+            Magazines = 1;
+        }
+        MagazineSFX.PlayOneShot(MagazineSFX.clip);
         reloading = false;
         weaponAnimator.SetBool("Reloading", false);
+        MagazineIcon.fillAmount = bulletsLeft / magazineSize;
     }
+
 }
