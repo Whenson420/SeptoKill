@@ -2340,7 +2340,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &456203027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3840,6 +3840,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63ccd360f60b19e499ae52f691e8845f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerSettings:
+    ViewXSensitivity: 0
+    ViewYSensitivity: 0
+    AimingSensitivityEffector: 0
+    ViewXInverted: 0
+    ViewYInverted: 0
+    SprintingHold: 0
+    MovementSmoothing: 0
+    RunningForwardSpeed: 0
+    WalkingForwardSpeed: 0
+    WalkingStrafeSpeed: 0
+    WalkingBackwardSpeed: 0
+    JumpingHeight: 0
+    JumpingFalloff: 0
+    FallingSmoothing: 0
+    SpeedEffector: 1
+    CrouchSpeedEffector: 0
+    ProneSpeedEffector: 0
+    FallingSpeedEffector: 0
+    AimingSpeedEffector: 0
+    isGroundedRadius: 0
+    isFallingSpeed: 0
   NewGameLevel: Test
   AreYouSure: 0
   EndlessModeButton: {fileID: 6704866}
@@ -3847,9 +3869,9 @@ MonoBehaviour:
   MasterVolumeSlider: {fileID: 933222572}
   confirmationPrompt: {fileID: 1978938421}
   defaultMasterVolume: 1
-  Sensitivity: {fileID: 0}
-  invertX: 0
-  invertY: 0
+  Sensitivity: {fileID: 1558920042}
+  invertY: {fileID: 1243039122}
+  invertX: {fileID: 279127166}
 --- !u!1 &846935150
 GameObject:
   m_ObjectHideFlags: 0
@@ -6014,8 +6036,8 @@ MonoBehaviour:
   m_HideSoftKeyboard: 0
   m_CharacterValidation: 0
   m_RegexValue: 
-  m_GlobalPointSize: 14
-  m_CharacterLimit: 0
+  m_GlobalPointSize: 24
+  m_CharacterLimit: 5
   m_OnEndEdit:
     m_PersistentCalls:
       m_Calls: []
@@ -6043,7 +6065,7 @@ MonoBehaviour:
   m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_CustomCaretColor: 0
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
-  m_Text: 
+  m_Text: 4
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
   m_ReadOnly: 0
@@ -6951,7 +6973,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1842652225}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
@@ -6991,8 +7013,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -7148,7 +7170,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 510053703}
+      - m_Target: {fileID: 456203026}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
         m_Mode: 6
@@ -8372,7 +8394,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2099037653}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
@@ -8600,7 +8622,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u200B"
+  m_text: "4\u200B"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -8627,14 +8649,14 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 33.1
+  m_fontSizeBase: 24
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0

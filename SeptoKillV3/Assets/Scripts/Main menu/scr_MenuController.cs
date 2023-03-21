@@ -74,12 +74,6 @@ public class scr_MenuController : MonoBehaviour
         PlayerPrefs.SetFloat("masterVolume", AudioListener.volume);
         StartCoroutine(ConfirmationBox());
     }
-    public IEnumerator ConfirmationBox()
-    {
-        confirmationPrompt.SetActive(true);
-        yield return new WaitForSeconds(2);
-        confirmationPrompt.SetActive(false);
-    }
     #endregion
     #region Gameplay
     public void ApplyGameplay()
@@ -87,6 +81,7 @@ public class scr_MenuController : MonoBehaviour
         PlayerPrefs.SetFloat("Sensitivity", float.Parse(Sensitivity.text));
         PlayerPrefs.SetInt("invertX", invertX ? 1 : 0);
         PlayerPrefs.SetInt("invertY", invertY ? 1 : 0);
+        StartCoroutine(ConfirmationBox());
     }
     #endregion
     public void ResetButton(string MenuType)
@@ -100,8 +95,17 @@ public class scr_MenuController : MonoBehaviour
         }
         if (MenuType == "Gameplay")
         {
-
+            Sensitivity.text = defaultSens.ToString();
+            invertX.isOn = false;
+            invertY.isOn = false;
+            ApplyGameplay();
         }
+    }
+    public IEnumerator ConfirmationBox()
+    {
+        confirmationPrompt.SetActive(true);
+        yield return new WaitForSeconds(2);
+        confirmationPrompt.SetActive(false);
     }
 
 }
