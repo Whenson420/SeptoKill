@@ -221,6 +221,8 @@ public class WeaponController : MonoBehaviour
     }
     public void Shoot()
     {
+        GameObject hole = new GameObject();
+        GameObject flash = new GameObject();
         readyToShoot = false;
         if (!(bulletsLeft == 0))
         {
@@ -236,8 +238,8 @@ public class WeaponController : MonoBehaviour
             }
 
             CameraShaker.Instance.ShakeOnce(camShakeMagnitude,1f,camShakeDuration/2,camShakeDuration/2);
-            Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
-            Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
+            hole = Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
+            flash = Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
 
             bulletsLeft--;
             bulletsShot--;
@@ -252,6 +254,8 @@ public class WeaponController : MonoBehaviour
                 Invoke("Shoot", timeBetweenShots);
         }        
         MagazineIcon.fillAmount = bulletsLeft / magazineSize;
+        Destroy(flash, 1.5f);
+        Destroy(hole, 6.0f);
     }
     private void ResetShot()
     {

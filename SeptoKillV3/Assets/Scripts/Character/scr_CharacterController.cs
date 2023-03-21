@@ -203,6 +203,10 @@ public class scr_CharacterController : MonoBehaviour
 
             }
         }
+        if (isAimingIn)
+        {
+            weaponAnimationSpeed = 0;
+        }
     }
     #region Movement
 
@@ -299,14 +303,11 @@ public class scr_CharacterController : MonoBehaviour
         {
             playerSettings.SpeedEffector = 1;
         }
-
         weaponAnimationSpeed = characterController.velocity.magnitude / (playerSettings.WalkingForwardSpeed * playerSettings.SpeedEffector);
         if (weaponAnimationSpeed > 1)
         {
             weaponAnimationSpeed = 1;
         }
-
-
 
         verticalSpeed *= playerSettings.SpeedEffector;
         horizontalSpeed *= playerSettings.SpeedEffector;
